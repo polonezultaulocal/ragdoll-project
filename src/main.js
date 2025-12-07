@@ -42,12 +42,12 @@ scene.add(ground);
 // LOAD
 const loader = new GLTFLoader();
 loader.load(
-  '/model.glb',
+  '/RobotExpressive.glb',
   (gltf) => {
     const model = gltf.scene;
 
     model.position.set(0, 0, 0);
-    model.scale.set(0.01, 0.01, 0.01); 
+    model.scale.set(1, 1, 1); 
 
     scene.add(model);
     console.log('Model loaded:', model);
