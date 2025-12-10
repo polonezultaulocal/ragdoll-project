@@ -50,6 +50,13 @@ loader.load(
     model.scale.set(1, 1, 1); 
 
     scene.add(model);
+
+
+    model.traverse((child) => {
+      if (child.isBone) {  // Check if object is a bone
+        console.log('Bone Name:', child.name);  // Log the name of the bone to the BROWSER console 
+      }
+    });
     console.log('Model loaded:', model);
   },
   undefined,
@@ -63,3 +70,5 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
+
