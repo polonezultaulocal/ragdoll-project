@@ -15,6 +15,22 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// BUTTON TO START ANIMATION
+const button = document.createElement('button');
+button.textContent = 'Start Animation';
+button.style.position = 'absolute';
+button.style.top = '20px';
+button.style.right = '20px';
+button.style.padding = '10px 20px';
+button.style.fontSize = '16px';
+document.body.appendChild(button);
+
+let animationActive = false;
+button.addEventListener('click', () => {
+    animationActive = !animationActive; // TOGGLE ANIMATION
+    button.textContent = animationActive ? 'Stop Robot Wave' : 'Start Robot Wave';
+});
+
 // CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -81,7 +97,7 @@ loader.load(
     skeletonHelper.material.linewidth = 2; 
     scene.add(skeletonHelper);
 
-    // FIND ARM BONES & create invisible meshes along each bone
+    // FIND ARM BONES + CREATE INVISIBLE MESHES FOR RAYCASTING
     model.traverse((child) => {
       if (child.isBone) {
 
@@ -140,12 +156,12 @@ function animate() {
 
   const t = clock.getElapsedTime();
 
-  if (shoulderR && lowerArmR) {
+  if (animationActive && shoulderR && lowerArmR) {
     lowerArmR.rotation.z = Math.sin(t * 4) * 0.4;
     lowerArmR.rotation.y = Math.PI / 2 + Math.sin(t * 3) * 0.2;
   }
 
-  // UPDATE
+  // UPDATE BONE HELPER MESHES
   boneHelpers.forEach(({ bone, mesh }) => {
     const startPos = new THREE.Vector3();
     const endPos = new THREE.Vector3();
@@ -179,3 +195,4 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
