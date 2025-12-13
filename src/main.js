@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
 // SCENE
 const scene = new THREE.Scene();
@@ -47,13 +48,25 @@ scene.add(dirLight);
 
 // GROUND
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
+  new THREE.PlaneGeometry(5, 5),
   new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
 );
 ground.rotation.x = -Math.PI/2;
 ground.position.y = 0;
 ground.receiveShadow = true;
 scene.add(ground);
+
+const rgbeLoader = new RGBELoader();
+rgbeLoader.load(
+    '/skate_park_1k.hdr', 
+    (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture; 
+        scene.environment = texture;  
+    },
+    undefined,
+    (err) => console.error('Error loading HDR:', err)
+);
 
 // LOADER
 const loader = new GLTFLoader();
@@ -83,6 +96,7 @@ window.addEventListener('mousemove', (event) => {
 
 let boneHelpers = [];
 
+// LOAD MODEL
 loader.load(
   '/RobotExpressive.glb',
   (gltf) => {
