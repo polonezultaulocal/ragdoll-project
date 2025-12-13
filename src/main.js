@@ -32,6 +32,37 @@ button.addEventListener('click', () => {
     button.textContent = animationActive ? 'Stop Robot Wave' : 'Start Robot Wave';
 });
 
+// CREDITS
+const creditDiv = document.createElement('div');
+creditDiv.style.position = 'absolute';
+creditDiv.style.top = '10px';
+creditDiv.style.left = '50%';
+creditDiv.style.transform = 'translateX(-50%)';
+creditDiv.style.color = 'white';
+creditDiv.style.fontFamily = 'Arial, sans-serif';
+creditDiv.style.fontSize = '14px';
+creditDiv.style.textAlign = 'center';
+creditDiv.innerHTML = `
+  Model by <a href="https://www.patreon.com/quaternius" target="_blank" style="color: #aaf; text-decoration: underline;">Tomas Laulhe</a> | HDR Background by <a href="https://polyhaven.com/a/skate_park" target="_blank" style="color: #aaf; text-decoration: underline;">Greg Zaal</a>
+`;
+document.body.appendChild(creditDiv);
+
+const bottomDiv = document.createElement('div');
+bottomDiv.style.position = 'absolute';
+bottomDiv.style.bottom = '10px'; 
+bottomDiv.style.left = '50%';
+bottomDiv.style.transform = 'translateX(-50%)';
+bottomDiv.style.color = 'white';
+bottomDiv.style.fontFamily = 'Arial, sans-serif';
+bottomDiv.style.fontSize = '14px';
+bottomDiv.style.textAlign = 'center';
+bottomDiv.innerHTML = `
+  An attempt at coding something by <a href="https://github.com/polonezultaulocal/ragdoll-project" target="_blank" style="color: #aaf; text-decoration: underline;">Alexander Botoaca</a> with support from Radu Marias
+`;
+document.body.appendChild(bottomDiv);
+
+
+
 // CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
