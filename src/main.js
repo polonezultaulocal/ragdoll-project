@@ -46,6 +46,27 @@ const loader = new GLTFLoader();
 let shoulderR, upperArmR, lowerArmR, palm1R;
 const clock = new THREE.Clock();
 
+// RAYCASTING
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const boneNameDiv = document.createElement('div');
+boneNameDiv.style.position = 'absolute';
+boneNameDiv.style.top = '10px';
+boneNameDiv.style.left = '10px';
+boneNameDiv.style.color = 'white';
+boneNameDiv.style.fontFamily = 'Arial';
+boneNameDiv.style.fontSize = '16px';
+boneNameDiv.style.pointerEvents = 'none';
+document.body.appendChild(boneNameDiv);
+
+// MOUSE TRACKING
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
+
+let boneHelpers = [];
+
 loader.load(
   '/RobotExpressive.glb',
   (gltf) => {
@@ -60,10 +81,35 @@ loader.load(
     skeletonHelper.material.linewidth = 2; 
     scene.add(skeletonHelper);
 
-    // FIND ARM BONES (for wave animation)
+    // FIND ARM BONES & create invisible meshes along each bone
     model.traverse((child) => {
       if (child.isBone) {
-        console.log('Bone Name:', child.name);
+
+        if (child.children.length > 0) {
+          const startPos = new THREE.Vector3();
+          const endPos = new THREE.Vector3();
+          child.getWorldPosition(startPos);
+          child.children[0].getWorldPosition(endPos);
+
+          const length = startPos.distanceTo(endPos);
+          const geometry = new THREE.CylinderGeometry(0.05, 0.05, length, 8); 
+          const material = new THREE.MeshBasicMaterial({ visible: false });
+          const mesh = new THREE.Mesh(geometry, material);
+          scene.add(mesh);
+
+          // MIDPOINT
+          const midPos = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+          mesh.position.copy(midPos);
+
+          // ORIENT MESH ALONG BONE
+          const dir = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+          const axis = new THREE.Vector3(0, 1, 0); 
+          const quaternion = new THREE.Quaternion().setFromUnitVectors(axis, dir);
+          mesh.quaternion.copy(quaternion);
+
+          boneHelpers.push({ bone: child, mesh: mesh });
+        }
+
         if (child.name === 'ShoulderR') {
           shoulderR = child;
           shoulderR.rotation.z = Math.PI / 1.5;
@@ -81,8 +127,8 @@ loader.load(
         }
       }
     });
+
     console.log('Model loaded:', model);
-    console.log('Right arm bones ready:', shoulderR, upperArmR, lowerArmR, palm1R);
   },
   undefined,
   (err) => console.error('Error loading model:', err)
@@ -95,13 +141,41 @@ function animate() {
   const t = clock.getElapsedTime();
 
   if (shoulderR && lowerArmR) {
-    
     lowerArmR.rotation.z = Math.sin(t * 4) * 0.4;
     lowerArmR.rotation.y = Math.PI / 2 + Math.sin(t * 3) * 0.2;
+  }
+
+  // UPDATE
+  boneHelpers.forEach(({ bone, mesh }) => {
+    const startPos = new THREE.Vector3();
+    const endPos = new THREE.Vector3();
+    bone.getWorldPosition(startPos);
+    if (bone.children.length > 0) {
+      bone.children[0].getWorldPosition(endPos);
+      const length = startPos.distanceTo(endPos);
+      mesh.scale.set(1, length / mesh.geometry.parameters.height, 1); 
+      const midPos = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+      mesh.position.copy(midPos);
+
+      const dir = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+      const axis = new THREE.Vector3(0, 1, 0);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(axis, dir);
+      mesh.quaternion.copy(quaternion);
+    }
+  });
+
+  // RAYCASTING
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(boneHelpers.map(b => b.mesh), true);
+
+  if (intersects.length > 0) {
+    const hoveredBone = boneHelpers.find(b => b.mesh === intersects[0].object);
+    if (hoveredBone) boneNameDiv.textContent = hoveredBone.bone.name;
+  } else {
+    boneNameDiv.textContent = '';
   }
 
   controls.update();
   renderer.render(scene, camera);
 }
 animate();
-
